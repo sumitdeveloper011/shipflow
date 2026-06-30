@@ -49,7 +49,15 @@ const PLANS = [
       "SSO & audit logs",
     ],
   },
-] as const;
+] satisfies Array<{
+  id: string;
+  name: string;
+  price: number;
+  aiCredits: number;
+  repos: number;
+  features: readonly string[];
+  highlighted?: boolean;
+}>;
 
 declare global {
   interface Window {
