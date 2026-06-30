@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth, githubApp } from "@shipflow/api";
 import { db } from "@shipflow/db";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
   const installationId = searchParams.get("installation_id");

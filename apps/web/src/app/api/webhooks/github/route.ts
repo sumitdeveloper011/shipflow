@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { githubApp, inngest } from "@shipflow/api";
 import { db } from "@shipflow/db";

@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import { appRouter, createContext } from "@shipflow/api";
 import type { NextRequest } from "next/server";

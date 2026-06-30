@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { serve } from "inngest/next";
 import { inngest } from "@shipflow/api";
 import { onFeatureRequestCreated, onFeatureRequestMessage } from "@shipflow/api/workflows/featureRequest";
