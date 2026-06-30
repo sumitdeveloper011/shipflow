@@ -1,0 +1,24 @@
+{
+  "name": "shipflow",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "lint": "turbo lint",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "db:push": "turbo db:push",
+    "db:generate": "turbo db:generate",
+    "db:studio": "cd packages/db && npx prisma studio"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.5",
+    "prettier": "^3.2.4",
+    "turbo": "^2.0.0",
+    "typescript": "^5.3.3"
+  },
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=20"
+  }
+}

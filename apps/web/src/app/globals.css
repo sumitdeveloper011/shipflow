@@ -1,0 +1,204 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Light mode — clean white with violet accents */
+    --background: 240 20% 99%;
+    --foreground: 240 15% 8%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 15% 8%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 15% 8%;
+    --primary: 262 83% 58%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 10% 95%;
+    --secondary-foreground: 240 15% 20%;
+    --muted: 240 10% 95%;
+    --muted-foreground: 240 8% 50%;
+    --accent: 240 10% 93%;
+    --accent-foreground: 240 15% 15%;
+    --destructive: 351 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 240 10% 88%;
+    --input: 240 10% 92%;
+    --ring: 262 83% 58%;
+    --radius: 0.625rem;
+    /* Brand colors */
+    --violet: 262 83% 58%;
+    --blue: 213 94% 68%;
+    --emerald: 160 84% 39%;
+    --amber: 38 92% 50%;
+    --rose: 351 84% 60%;
+  }
+
+  .dark {
+    /* Deep Signal — navy-black + violet */
+    --background: 240 25% 5%;
+    --foreground: 240 10% 93%;
+    --card: 240 22% 7%;
+    --card-foreground: 240 10% 93%;
+    --popover: 240 22% 8%;
+    --popover-foreground: 240 10% 93%;
+    --primary: 262 83% 63%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 18% 11%;
+    --secondary-foreground: 240 10% 85%;
+    --muted: 240 18% 11%;
+    --muted-foreground: 240 8% 52%;
+    --accent: 240 18% 13%;
+    --accent-foreground: 240 10% 90%;
+    --destructive: 351 75% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 240 18% 14%;
+    --input: 240 18% 13%;
+    --ring: 262 83% 63%;
+    /* Brand colors */
+    --violet: 262 83% 63%;
+    --blue: 213 94% 68%;
+    --emerald: 160 84% 45%;
+    --amber: 38 92% 55%;
+    --rose: 351 84% 62%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 99px; }
+  ::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground) / 0.5); }
+}
+
+@layer utilities {
+  /* Gradient text utility */
+  .text-gradient {
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--blue)) 50%, hsl(var(--emerald)) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .text-gradient-violet {
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(262 83% 78%) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Glow effects */
+  .glow-violet {
+    box-shadow: 0 0 30px hsl(var(--primary) / 0.35), 0 0 60px hsl(var(--primary) / 0.15);
+  }
+
+  .glow-violet-sm {
+    box-shadow: 0 0 15px hsl(var(--primary) / 0.3);
+  }
+
+  /* Glass card */
+  .glass {
+    background: hsl(var(--card) / 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid hsl(var(--border));
+  }
+
+  /* Gradient border */
+  .border-gradient {
+    position: relative;
+    background: hsl(var(--card));
+    border-radius: var(--radius);
+  }
+  .border-gradient::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: calc(var(--radius) + 1px);
+    background: linear-gradient(135deg, hsl(var(--primary) / 0.5), hsl(var(--blue) / 0.3), transparent);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: destination-out;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  /* Animations */
+  .animate-float {
+    animation: float 4s ease-in-out infinite;
+  }
+  .animate-float-delay {
+    animation: float 4s ease-in-out 1.5s infinite;
+  }
+  .animate-pulse-slow {
+    animation: pulse 3s ease-in-out infinite;
+  }
+  .animate-shimmer {
+    animation: shimmer 2.5s linear infinite;
+    background: linear-gradient(90deg, transparent 0%, hsl(var(--primary) / 0.1) 50%, transparent 100%);
+    background-size: 200% 100%;
+  }
+  .animate-glow-pulse {
+    animation: glowPulse 2s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-8px); }
+  }
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  @keyframes glowPulse {
+    0%, 100% { box-shadow: 0 0 20px hsl(var(--primary) / 0.3); }
+    50% { box-shadow: 0 0 40px hsl(var(--primary) / 0.6); }
+  }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes pipelineWalk {
+    0%   { transform: translateX(-100%); opacity: 0; }
+    10%  { opacity: 1; }
+    90%  { opacity: 1; }
+    100% { transform: translateX(100%); opacity: 0; }
+  }
+  @keyframes gradientShift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+  @keyframes orbitSpin {
+    from { transform: rotate(0deg) translateX(120px) rotate(0deg); }
+    to { transform: rotate(360deg) translateX(120px) rotate(-360deg); }
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.5s ease-out forwards;
+  }
+  .animate-fade-in {
+    animation: fadeIn 0.4s ease-out forwards;
+  }
+  .animate-gradient-shift {
+    background-size: 300% 300%;
+    animation: gradientShift 4s ease infinite;
+  }
+  .pipeline-beam {
+    animation: pipelineWalk 3s ease-in-out infinite;
+  }
+}

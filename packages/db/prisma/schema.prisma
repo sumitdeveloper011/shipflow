@@ -1,0 +1,404 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Auth Models (BetterAuth) ─────────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  sessions      Session[]
+  accounts      Account[]
+  memberships   WorkspaceMember[]
+  featureRequests FeatureRequest[]
+  approvals     Release[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Account {
+  id                    String   @id @default(cuid())
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+// ─── Multi-Tenant Workspace ───────────────────────────────────────────────────
+
+model Workspace {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  logo        String?
+  plan        Plan     @default(FREE)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members     WorkspaceMember[]
+  projects    Project[]
+  repositories Repository[]
+  billing     Billing?
+  githubInstallation GithubInstallation?
+}
+
+model WorkspaceMember {
+  id          String    @id @default(cuid())
+  workspaceId String
+  userId      String
+  role        MemberRole @default(MEMBER)
+  createdAt   DateTime  @default(now())
+
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, userId])
+}
+
+// ─── GitHub Integration ───────────────────────────────────────────────────────
+
+model GithubInstallation {
+  id             String    @id @default(cuid())
+  workspaceId    String    @unique
+  installationId Int       @unique
+  accountLogin   String
+  accountType    String
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  workspace      Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+}
+
+model Repository {
+  id            String    @id @default(cuid())
+  workspaceId   String
+  githubRepoId  BigInt    @unique
+  fullName      String    // "owner/repo"
+  name          String
+  owner         String
+  defaultBranch String    @default("main")
+  private       Boolean   @default(false)
+  url           String
+  metadata      Json?     // AI-generated analysis: techStack, frameworks, architecture, etc.
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  workspace     Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  projects      Project[]
+  pullRequests  PullRequest[]
+}
+
+// ─── Projects ─────────────────────────────────────────────────────────────────
+
+model Project {
+  id           String    @id @default(cuid())
+  workspaceId  String
+  repositoryId String?
+  name         String
+  description  String?
+  status       ProjectStatus @default(ACTIVE)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  workspace    Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  repository   Repository? @relation(fields: [repositoryId], references: [id])
+  featureRequests FeatureRequest[]
+}
+
+// ─── Feature Request → PRD ────────────────────────────────────────────────────
+
+model FeatureRequest {
+  id           String        @id @default(cuid())
+  projectId    String
+  createdById  String
+  title        String
+  description  String
+  source       RequestSource @default(MANUAL)
+  status       FeatureStatus @default(DISCOVERY)
+  rawInput     String?       // original customer message
+  aiMessages   Json          @default("[]") // clarification conversation
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  project      Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdBy    User           @relation(fields: [createdById], references: [id])
+  prd          PRD?
+  release      Release?
+  pullRequests PullRequest[]
+}
+
+model PRD {
+  id                String   @id @default(cuid())
+  featureRequestId  String   @unique
+  problemStatement  String
+  goals             String[]
+  nonGoals          String[]
+  userStories       Json     // UserStory[]
+  acceptanceCriteria Json    // Criterion[]
+  edgeCases         String[]
+  successMetrics    String[]
+  status            PRDStatus @default(DRAFT)
+  generationJobId   String?   // Inngest job id
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  featureRequest    FeatureRequest @relation(fields: [featureRequestId], references: [id], onDelete: Cascade)
+  tasks             EngineeringTask[]
+}
+
+// ─── Engineering Tasks (Kanban) ───────────────────────────────────────────────
+
+model EngineeringTask {
+  id          String      @id @default(cuid())
+  prdId       String
+  title       String
+  description String
+  priority    Priority    @default(MEDIUM)
+  status      TaskStatus  @default(TODO)
+  order       Int         @default(0)
+  labels      String[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  prd         PRD         @relation(fields: [prdId], references: [id], onDelete: Cascade)
+}
+
+// ─── Pull Requests & AI Review ────────────────────────────────────────────────
+
+model PullRequest {
+  id              String     @id @default(cuid())
+  repositoryId    String
+  githubPrId      BigInt
+  number          Int
+  title           String
+  body            String?
+  state           PRState    @default(OPEN)
+  headBranch      String
+  baseBranch      String
+  htmlUrl         String
+  diffUrl         String?
+  authorLogin     String
+  featureRequestId String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  repository      Repository      @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  featureRequest  FeatureRequest? @relation(fields: [featureRequestId], references: [id])
+  reviews         AIReview[]
+
+  @@unique([repositoryId, number])
+}
+
+model AIReview {
+  id              String        @id @default(cuid())
+  pullRequestId   String
+  summary         String
+  verdict         ReviewVerdict
+  requirementsCoverage Int      // 0-100
+  jobId           String?       // Inngest job id
+  status          ReviewStatus  @default(PENDING)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  pullRequest     PullRequest   @relation(fields: [pullRequestId], references: [id], onDelete: Cascade)
+  issues          ReviewIssue[]
+}
+
+model ReviewIssue {
+  id          String      @id @default(cuid())
+  reviewId    String
+  category    IssueCategory
+  severity    IssueSeverity
+  title       String
+  description String
+  filePath    String?
+  lineNumber  Int?
+  suggestion  String?
+  resolved    Boolean     @default(false)
+  createdAt   DateTime    @default(now())
+
+  review      AIReview    @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+}
+
+// ─── Human Approval & Release ─────────────────────────────────────────────────
+
+model Release {
+  id               String        @id @default(cuid())
+  featureRequestId String        @unique
+  reviewedById     String?
+  status           ReleaseStatus @default(PENDING)
+  notes            String?
+  approvedAt       DateTime?
+  readinessReport  Json?         // AI readiness check: { isReady, score, blockers, warnings, summary, recommendation }
+  readinessScore   Int?          // 0-100
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  featureRequest   FeatureRequest @relation(fields: [featureRequestId], references: [id], onDelete: Cascade)
+  reviewedBy       User?         @relation(fields: [reviewedById], references: [id])
+}
+
+// ─── Billing ─────────────────────────────────────────────────────────────────
+
+model Billing {
+  id                  String   @id @default(cuid())
+  workspaceId         String   @unique
+  plan                Plan     @default(FREE)
+  razorpayCustomerId  String?
+  razorpaySubId       String?
+  status              BillingStatus @default(ACTIVE)
+  aiCreditsUsed       Int      @default(0)
+  aiCreditsLimit      Int      @default(10)
+  repoLimit           Int      @default(1)
+  currentPeriodEnd    DateTime?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  workspace           Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum Plan {
+  FREE
+  PRO
+  ENTERPRISE
+}
+
+enum MemberRole {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
+}
+
+enum ProjectStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+enum RequestSource {
+  MANUAL
+  EMAIL
+  TICKET
+  CHAT
+}
+
+enum FeatureStatus {
+  DISCOVERY
+  PRD_GENERATING
+  PRD_READY
+  PLANNING
+  IN_DEVELOPMENT
+  IN_REVIEW
+  FIX_NEEDED
+  HUMAN_REVIEW
+  APPROVED
+  SHIPPED
+  REJECTED
+}
+
+enum PRDStatus {
+  DRAFT
+  GENERATING
+  READY
+  APPROVED
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum PRState {
+  OPEN
+  CLOSED
+  MERGED
+}
+
+enum ReviewStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+enum ReviewVerdict {
+  APPROVED
+  NEEDS_CHANGES
+  BLOCKED
+}
+
+enum IssueSeverity {
+  BLOCKING
+  NON_BLOCKING
+}
+
+enum IssueCategory {
+  REQUIREMENTS
+  SECURITY
+  PERFORMANCE
+  CODE_QUALITY
+  EDGE_CASE
+  ACCEPTANCE_CRITERIA
+}
+
+enum ReleaseStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SHIPPED
+}
+
+enum BillingStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+}
