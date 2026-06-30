@@ -5,7 +5,28 @@
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"],
+      "env": [
+        "DATABASE_URL",
+        "BETTER_AUTH_SECRET",
+        "BETTER_AUTH_URL",
+        "NEXTAUTH_URL",
+        "OPENAI_API_KEY",
+        "GOOGLE_GENERATIVE_AI_API_KEY",
+        "INNGEST_EVENT_KEY",
+        "INNGEST_SIGNING_KEY",
+        "RAZORPAY_KEY_ID",
+        "RAZORPAY_KEY_SECRET",
+        "RAZORPAY_WEBHOOK_SECRET",
+        "APP_URL",
+        "NEXT_PUBLIC_APP_URL",
+        "NEXT_PUBLIC_GITHUB_APP_NAME",
+        "GITHUB_APP_ID",
+        "GITHUB_APP_PRIVATE_KEY",
+        "GITHUB_APP_CLIENT_ID",
+        "GITHUB_APP_CLIENT_SECRET",
+        "GITHUB_APP_WEBHOOK_SECRET"
+      ]
     },
     "dev": {
       "cache": false,
