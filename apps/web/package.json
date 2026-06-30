@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "scripts": {
     "dev": "next dev",
-    "build": "npx prisma generate --schema=../../packages/db/prisma/schema.prisma && next build",
+    "build": "cd ../../packages/db && npx prisma@5 generate && cd ../../apps/web && next build",
     "start": "next start",
     "lint": "next lint"
   },
